@@ -2,14 +2,15 @@
 
 let {mat4, vec4, vec3, vec2} = glMatrix;
 
-const SPEED = 0.1;
+const SPEED = 0.1; // Velocidade
 
-const COS_45 = Math.cos(Math.PI * 0.25);
+const COS_45 = Math.cos(Math.PI * 0.25); // Calculo para distancia de pontos em um plano cartesiano
 
-let ku = 0, 
-    kd = 0, 
-    kl = 0, 
-    kr = 0,
+let keyUpArrow = 0, 
+    keyDownArrow = 0, 
+    keyLeft = 0, 
+    keyRight = 0,
+    origin = [0,0,0],
     pos = [0,0,0];
 
 let frame = 0,
@@ -28,19 +29,34 @@ let frame = 0,
     projectionUniform,
     projection,
     loc = [0, 0, 0],
-    modelUniform,
-    model,
-    model2,
     viewUniform,
-    view,
-    eye = [0, 0, 0],
-    colorUniform,
-    color1 = [1, 0, 0],
-    color2 = [0, 0, 1],
-    color3 = [0, .7, 0],
-    color4 = [1, 0, 1],
-    color5 = [1, .6, 0],
-    color6 = [0, 1, 1];
+    view;
+
+let modelUniform,
+    model,
+    models,
+    player;
+
+let colorUniform,
+    vermelho = [1, 0, 0],
+    black = [0, 0, 0],
+    azul = [0, 0, 1],
+    verde = [0, .5, 0],
+    roxo = [.7, 0, .7],
+    laranja = [1, .6, 0],
+    azulClaro = [0, 1, 1],
+    pink = [1, .5, 1],
+    laranjaEscuro = [1, .5, 0]
+    azulMedio = [0, .5, 1];
+
+// Variables for view
+let eye = [0, 0, 15],
+    up = [0, 1, 0],
+    center = [0, 0, 0];
+
+//======================================================================================================
+//======================================================================================================
+
 
 function resize() {
     if (!gl) return;
@@ -57,7 +73,6 @@ function resize() {
     projection = mat4.perspective([], fovy, aspect, near, far);
     gl.uniformMatrix4fv(projectionUniform, false, projection);
 }
-
 
 function getCanvas() {
     return document.querySelector("canvas");
@@ -167,9 +182,6 @@ async function main() {
     window.addEventListener("resize", resize);
 
     // 7.2 - VIEW MATRIX UNIFORM
-    eye  = [-5, 3, 0];
-    let up = [0, 1, 0];
-    let center = [0, 0, 0];
     view = mat4.lookAt([], eye, center, up);
     viewUniform = gl.getUniformLocation(shaderProgram, "view");
     gl.uniformMatrix4fv(viewUniform, false, view);
@@ -178,8 +190,35 @@ async function main() {
     model = mat4.create();
     modelUniform = gl.getUniformLocation(shaderProgram, "model");
     
-    model2 = mat4.fromTranslation([], pos);
+    player = mat4.fromTranslation([], origin);
+    models = [
+        mat4.fromTranslation([], [pos[0] - 2, pos[1] + 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 0, pos[1] + 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 2, pos[1] + 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] - 2, pos[1] + 0, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 2, pos[1] + 0, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] - 2, pos[1] - 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 0, pos[1] - 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 2, pos[1] - 2, pos[2] + 0]),
 
+        mat4.fromTranslation([], [pos[0] - 4, pos[1] + 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 0, pos[1] + 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 4, pos[1] + 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] - 4, pos[1] + 0, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 4, pos[1] + 0, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] - 4, pos[1] - 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 0, pos[1] - 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 4, pos[1] - 4, pos[2] + 0]),
+
+        mat4.fromTranslation([], [pos[0] - 2, pos[1] + 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] - 4, pos[1] + 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 2, pos[1] + 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 4, pos[1] + 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 2, pos[1] - 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] + 4, pos[1] - 2, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] - 2, pos[1] - 4, pos[2] + 0]),
+        mat4.fromTranslation([], [pos[0] - 4, pos[1] - 2, pos[2] + 0]),
+    ];
 
     // 7.4 - COLOR UNIFORM
     colorUniform = gl.getUniformLocation(shaderProgram, "color");
@@ -187,34 +226,31 @@ async function main() {
 
     // 8 - Chamar o loop de redesenho
     render();
-
 }
 
 function render() {
     frame ++;
 
-    let time = frame / 100;
+    // let time = frame / 200;
 
-    let hor = (kl + kr) * SPEED;
-    let ver = (ku + kd) * SPEED;
+    let horizontal = (keyLeft + keyRight); // * SPEED
+    let vertical = (keyUpArrow + keyDownArrow); // * SPEED
 
-    if(hor !== 0 && ver !== 0) {
-        hor *= COS_45;
-        ver *= COS_45;
-    }
+    // if(horizontal !== 0 && vertical !== 0) {
+    //     horizontal *= COS_45;
+    //     vertical *= COS_45;
+    // }
 
-    pos[0] += hor;
-    pos[1] += ver;
+    origin[0] += horizontal; // Soma a posicao em X atualizada do Player
+    origin[1] += vertical; // Soma a posicao em Y atualizada do Player
 
-    model2 = mat4.fromTranslation([], pos);
+    player = mat4.fromTranslation([], origin);
 
-
-    eye  = [Math.sin(time) * 5, 3, Math.cos(time) * 5];
+    // eye  = [Math.sin(time) * 5, 3, Math.cos(time) * 5]; // For movement, use Math.cos and Math.sin with TIME
     let up = [0, 1, 0];
     let center = [0, 0, 0];
     view = mat4.lookAt([], eye, center, up);
     gl.uniformMatrix4fv(viewUniform, false, view);
-
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     // gl.POINTS
@@ -222,44 +258,58 @@ function render() {
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN 
     //gl.drawArrays(gl.TRIANGLES, 0, data.points.length / 2);
     
-    // CUBO 01
-    gl.uniformMatrix4fv(modelUniform, false, model);
-    gl.uniform3f(colorUniform, color1[0], color1[1], color1[2]);
+    // Player
+    gl.uniformMatrix4fv(modelUniform, false, player);
+    gl.uniform3f(colorUniform, 0, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 
-    // CUBO 02
-    gl.uniformMatrix4fv(modelUniform, false, model2);
-    gl.uniform3f(colorUniform, color2[0], color2[1], color2[2]);
+    // CUBO 01
+    gl.uniformMatrix4fv(modelUniform, false, model);
+    gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
-    
+
+    // Loop para renderizar todos os modelos de cubos
+    for (let i = 0; i < models.length; i++) {
+        gl.uniformMatrix4fv(modelUniform, false, models[i]);
+        gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
+    }
+
     window.requestAnimationFrame(render);
 }
 
-function follow(evt) {
-    let locX = evt.x / window.innerWidth * 2 - 1;
-    let locY = evt.y / window.innerHeight * -2 + 1;
-    loc = [locX, locY];
-}
-
 function keyUp(evt){
-    if(evt.key === "ArrowDown") return kd = 0;
-    if(evt.key === "ArrowUp") return ku = 0;
-    if(evt.key === "ArrowLeft") return kl = 0;
-    if(evt.key === "ArrowRight") return kr = 0;
+    if(evt.key === "ArrowDown") return keyDownArrow = 0;
+    if(evt.key === "ArrowUp") return keyUpArrow = 0;
+    if(evt.key === "ArrowLeft") return keyLeft = 0;
+    if(evt.key === "ArrowRight") return keyRight = 0;
 }
 
 function keyDown(evt){
-    if(evt.key === "ArrowDown") return kd = -1;
-    if(evt.key === "ArrowUp") return ku = 1;
-    if(evt.key === "ArrowLeft") return kl = -1;
-    if(evt.key === "ArrowRight") return kr = 1;
+    if(evt.key === "ArrowDown") {
+        return keyDownArrow = -0.5;
+    }
+    if(evt.key === "ArrowUp") {
+        return keyUpArrow = 0.5;
+    }
+    if(evt.key === "ArrowLeft") {
+        return keyLeft = -0.5;
+    }
+    if(evt.key === "ArrowRight") {
+        return keyRight = 0.5;
+    }
 }
 
 
 // keypress, keydown, keyup
 window.addEventListener("load", main);
 
-window.addEventListener("mousemove", follow);
+// function follow(evt) {
+//     let locX = evt.x / window.innerWidth * 2 - 1;
+//     let locY = evt.y / window.innerHeight * -2 + 1;
+//     loc = [locX, locY];
+// }
+// window.addEventListener("mousemove", follow);
 
 window.addEventListener("keyup", keyUp);
 window.addEventListener("keydown", keyDown);
