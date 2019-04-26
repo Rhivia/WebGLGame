@@ -1,6 +1,6 @@
 /* Variávei globais */
-
 let {mat4, vec4, vec3, vec2} = glMatrix;
+// let { getCanvas } = render;
 
 const SPEED = 0.1; // Velocidade
 
@@ -56,7 +56,6 @@ let eye = [0, 0, 15],
 
 //======================================================================================================
 //======================================================================================================
-
 
 function resize() {
     if (!gl) return;
@@ -219,6 +218,7 @@ async function main() {
         mat4.fromTranslation([], [pos[0] - 2, pos[1] - 4, pos[2] + 0]),
         mat4.fromTranslation([], [pos[0] - 4, pos[1] - 2, pos[2] + 0]),
     ];
+    apple = mat4.fromTranslation([], [pos[0] - 4, pos[1] - 2, pos[2] + 0]);
 
     // 7.4 - COLOR UNIFORM
     colorUniform = gl.getUniformLocation(shaderProgram, "color");
@@ -263,6 +263,10 @@ function render() {
     gl.uniform3f(colorUniform, 0, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 
+    gl.uniformMatrix4fv(modelUniform, false, apple);
+    gl.uniform3f(colorUniform, vermelho[0], vermelho[1], vermelho[2]);
+    gl.drawArrays(gl.TRIANGLES, 0, 36);
+
     // CUBO 01
     gl.uniformMatrix4fv(modelUniform, false, model);
     gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
@@ -279,10 +283,18 @@ function render() {
 }
 
 function keyUp(evt){
-    if(evt.key === "ArrowDown") return keyDownArrow = 0;
-    if(evt.key === "ArrowUp") return keyUpArrow = 0;
-    if(evt.key === "ArrowLeft") return keyLeft = 0;
-    if(evt.key === "ArrowRight") return keyRight = 0;
+    if(evt.key === "ArrowDown") {
+        return keyDownArrow = 0;
+    } 
+    if(evt.key === "ArrowUp") {
+        return keyUpArrow = 0;
+    }
+    if(evt.key === "ArrowLeft") {
+        return keyLeft = 0;
+    } 
+    if(evt.key === "ArrowRight") {
+        return keyRight = 0;
+    } 
 }
 
 function keyDown(evt){
