@@ -152,10 +152,10 @@ async function main() {
 
     // 3 - Ler os arquivos de shader
     vertexShaderSource = await fetch("vertex.glsl").then(r => r.text());
-    console.log("VERTEX", vertexShaderSource);
+    // console.log("VERTEX", vertexShaderSource);
 
     fragmentShaderSource = await fetch("fragment.glsl").then(r => r.text());
-    console.log("FRAGMENT", fragmentShaderSource);
+    // console.log("FRAGMENT", fragmentShaderSource);
 
     // 4 - Compilar arquivos de shader
     vertexShader = compileShader(vertexShaderSource, gl.VERTEX_SHADER, gl);
@@ -186,38 +186,10 @@ async function main() {
     gl.uniformMatrix4fv(viewUniform, false, view);
 
     // 7.3 - MODEL MATRIX UNIFORM
-    model = mat4.create();
     modelUniform = gl.getUniformLocation(shaderProgram, "model");
     
     player = mat4.fromTranslation([], origin);
-    models = [
-        mat4.fromTranslation([], [pos[0] - 2, pos[1] + 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 0, pos[1] + 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 2, pos[1] + 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] - 2, pos[1] + 0, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 2, pos[1] + 0, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] - 2, pos[1] - 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 0, pos[1] - 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 2, pos[1] - 2, pos[2] + 0]),
-
-        mat4.fromTranslation([], [pos[0] - 4, pos[1] + 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 0, pos[1] + 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 4, pos[1] + 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] - 4, pos[1] + 0, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 4, pos[1] + 0, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] - 4, pos[1] - 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 0, pos[1] - 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 4, pos[1] - 4, pos[2] + 0]),
-
-        mat4.fromTranslation([], [pos[0] - 2, pos[1] + 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] - 4, pos[1] + 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 2, pos[1] + 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 4, pos[1] + 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 2, pos[1] - 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] + 4, pos[1] - 2, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] - 2, pos[1] - 4, pos[2] + 0]),
-        mat4.fromTranslation([], [pos[0] - 4, pos[1] - 2, pos[2] + 0]),
-    ];
+    //background = mat4.fromTranslation([], [pos[0] - 2, pos[1] + 2, pos[2] + 0]);
     apple = mat4.fromTranslation([], [pos[0] - 4, pos[1] - 2, pos[2] + 0]);
 
     // 7.4 - COLOR UNIFORM
@@ -225,11 +197,15 @@ async function main() {
     //gl.uniform2f(locationUniform, loc[0], loc[1]);
 
     // 8 - Chamar o loop de redesenho
-    render();
+    tick();
 }
 
-function render() {
-    frame ++;
+function tick() {
+    frame++;
+
+    if(frame % 6 > 0) {
+        return window.requestAnimationFrame(tick);
+    }
 
     // let time = frame / 200;
 
@@ -262,24 +238,22 @@ function render() {
     gl.uniformMatrix4fv(modelUniform, false, player);
     gl.uniform3f(colorUniform, 0, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
-
+    
     gl.uniformMatrix4fv(modelUniform, false, apple);
     gl.uniform3f(colorUniform, vermelho[0], vermelho[1], vermelho[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 
     // CUBO 01
-    gl.uniformMatrix4fv(modelUniform, false, model);
-    gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
-    gl.drawArrays(gl.TRIANGLES, 0, 36);
+    // gl.uniformMatrix4fv(modelUniform, false, model);
+    // gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
+    // gl.drawArrays(gl.TRIANGLES, 0, 36);
 
     // Loop para renderizar todos os modelos de cubos
-    for (let i = 0; i < models.length; i++) {
-        gl.uniformMatrix4fv(modelUniform, false, models[i]);
-        gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
-        gl.drawArrays(gl.TRIANGLES, 0, 36);
-    }
+    // gl.uniformMatrix4fv(modelUniform, false, background);
+    // gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
+    // gl.drawArrays(gl.TRIANGLES, 0, 36);
 
-    window.requestAnimationFrame(render);
+    window.requestAnimationFrame(tick);
 }
 
 function keyUp(evt){
@@ -298,20 +272,24 @@ function keyUp(evt){
 }
 
 function keyDown(evt){
+    console.log(evt);
     if(evt.key === "ArrowDown") {
-        return keyDownArrow = -0.5;
+        console.log(player);
+        return keyDownArrow = -2;
     }
     if(evt.key === "ArrowUp") {
-        return keyUpArrow = 0.5;
+        console.log(player);
+        return keyUpArrow = 2;
     }
     if(evt.key === "ArrowLeft") {
-        return keyLeft = -0.5;
+        console.log(player);
+        return moveLeft(player);
     }
     if(evt.key === "ArrowRight") {
-        return keyRight = 0.5;
+        console.log(player);
+        return moveRight(player);
     }
 }
-
 
 // keypress, keydown, keyup
 window.addEventListener("load", main);
@@ -325,3 +303,31 @@ window.addEventListener("load", main);
 
 window.addEventListener("keyup", keyUp);
 window.addEventListener("keydown", keyDown);
+
+function moveRight(player) {
+    let np = [player[0][0] - 1, player[0][1]];
+    for(var i = player.length-1; i > 0; i--){
+        player[i] = player[i-1];
+    }
+    player[0] = np;
+}
+
+function moveLeft(player) {
+    let np = [player[0][0] + 1, player[0][1]];
+    for(var i = player.length-1; i > 0; i--){
+        player[i] = player[i-1];
+    }
+    player[0] = np;
+}
+
+function createMap(x, y) {
+    for (let i = 0; i < x; i++) {
+        for (let j = 0; j < y; j++) {
+            matriz[i] = [i, j];
+        }
+    }
+}
+
+function renderPlayer(pos) {
+    return mat4.fromTranslation([], [pos[0], pos[1], 0]);
+}
