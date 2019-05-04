@@ -28,6 +28,8 @@ let frame = 0,
     data,
     positionAttr,
     positionBuffer,
+    normalAttr,
+    normalBuffer,
     width,
     height,
     projectionUniform,
@@ -41,7 +43,7 @@ let modelUniform,
     models,
     player = [],
     playerAux = [],
-    playerSize = 0;
+    playerSize = 1;
 
 let colorUniform,
     vermelho = [1, 0, 0],
@@ -146,7 +148,34 @@ function getData() {
         ...p.g, ...p.e, ...p.h
     ];
 
-    return { "points": new Float32Array(faces)};
+    let n = {
+        frente: [0,0,-1],
+        topo: [0,1,0],
+        baixo: [0,-1,0],
+        esquerda: [-1,0,0],
+        direita: [1,0,0],
+        fundo: [0,0,1],
+      };
+    
+      let faceNormals = {
+        frente: [...n.frente, ...n.frente, ...n.frente, ...n.frente, ...n.frente, ...n.frente],
+        topo: [...n.topo, ...n.topo, ...n.topo, ...n.topo, ...n.topo, ...n.topo],
+        baixo: [...n.baixo, ...n.baixo, ...n.baixo, ...n.baixo, ...n.baixo, ...n.baixo],
+        esquerda: [...n.esquerda, ...n.esquerda, ...n.esquerda, ...n.esquerda, ...n.esquerda, ...n.esquerda],
+        direita: [...n.direita, ...n.direita, ...n.direita, ...n.direita, ...n.direita, ...n.direita],
+        fundo: [...n.fundo, ...n.fundo, ...n.fundo, ...n.fundo, ...n.fundo, ...n.fundo],
+      };
+    
+      let normals = [
+        ...faceNormals.frente,
+        ...faceNormals.topo,
+        ...faceNormals.baixo,
+        ...faceNormals.esquerda,
+        ...faceNormals.direita,
+        ...faceNormals.fundo
+      ];
+
+    return { "points": new Float32Array(faces), "normals": new Float32Array(normals)};
 }
 
 async function main() {
@@ -181,6 +210,13 @@ async function main() {
     gl.bufferData(gl.ARRAY_BUFFER, data.points, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(positionAttr);
     gl.vertexAttribPointer(positionAttr, 3, gl.FLOAT, false, 0, 0);
+
+    normalAttr = gl.getAttribLocation(shaderProgram, "normal");
+    normalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data.normals, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(normalAttr);
+    gl.vertexAttribPointer(normalAttr, 3, gl.FLOAT, false, 0, 0);
 
     // 7.1 - PROJECTION MATRIX UNIFORM
     resize();
@@ -251,13 +287,24 @@ function tick() {
 }
 
 function updateSnakePosition(player, novaPosicao) {
+    for (let i = 1; i < playerSize; i++) {
+        if(novaPosicao[0] == player[i][12] && novaPosicao[1] == player[i][13]){
+           alert("Perdeu!");
+       }       
+    }
+
+
     if (novaPosicao[0] == apple[12] && novaPosicao[1] == apple[13]) {
         playerSize++;
         player.unshift(mat4.fromTranslation([], [apple[12], apple[13], 0]));
+        
+        // Condição de vitória
+        if(playerSize == 6){
+            alert("Venceu!");
+        }
         apple = mat4.fromTranslation([], randomApple());
     } else {
         for (let i = playerSize; i > 0; i--) {
-            console.log(player[i], playerSize);
             player[i] = player[i - 1];
         }
         player[0] = mat4.fromTranslation([], novaPosicao);
@@ -302,25 +349,25 @@ function randomApple() {
 }
 
 function keyDown(evt){
-    if(evt.key === "ArrowDown") {
+    if(evt.key === "ArrowDown" && upArrow == 0) {
         rightArrow = 0;
         upArrow = 0;
         leftArrow = 0;
         return downArrow = -2;
     }
-    if(evt.key === "ArrowUp") {
+    if(evt.key === "ArrowUp" && downArrow == 0) {
         rightArrow = 0;
         downArrow = 0;
         leftArrow = 0;
         return upArrow = 2;
     }
-    if(evt.key === "ArrowLeft") {
+    if(evt.key === "ArrowLeft" && rightArrow == 0) {
         rightArrow = 0;
         downArrow = 0;
         upArrow = 0;
         return leftArrow = -2;
     }
-    if(evt.key === "ArrowRight") {
+    if(evt.key === "ArrowRight" && leftArrow == 0) {
         leftArrow = 0;
         downArrow = 0;
         upArrow = 0;
