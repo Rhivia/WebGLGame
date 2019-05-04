@@ -40,7 +40,7 @@ let modelUniform,
     model,
     models,
     player = [],
-    playerUpdate = [],
+    playerAux = [],
     playerSize = 0;
 
 let colorUniform,
@@ -56,7 +56,7 @@ let colorUniform,
     azulMedio = [0, .5, 1];
 
 // Variables for view
-let eye = [0, 0, 15],
+let eye = [0, -20, 15],
     up = [0, 1, 0],
     center = [0, 0, 0];
 
@@ -195,7 +195,7 @@ async function main() {
     modelUniform = gl.getUniformLocation(shaderProgram, "model");
     
     player[0] = mat4.fromTranslation([], [0, 0, 0]);
-    model = mat4.fromTranslation([], [-2, +2, 0]);
+    model = mat4.fromRotationTranslationScale([], [0, 0, 0, 1], [0, 0, -2], [ 11, 11, 1]);
     apple = mat4.fromTranslation([], [-4, -2, 0]);
 
     // 7.4 - COLOR UNIFORM
@@ -253,19 +253,14 @@ function tick() {
 function updateSnakePosition(player, novaPosicao) {
     if (novaPosicao[0] == apple[12] && novaPosicao[1] == apple[13]) {
         playerSize++;
-        player.push(mat4.fromTranslation([], [apple[12], apple[13], 0]));
+        player.unshift(mat4.fromTranslation([], [apple[12], apple[13], 0]));
         apple = mat4.fromTranslation([], randomApple());
     } else {
-        for (let i = 0; i < playerSize; i++) {
+        for (let i = playerSize; i > 0; i--) {
             console.log(player[i], playerSize);
-            // console.log(novaPosicao);
-            playerUpdate[playerSize] = player[i];
-            player[i] = mat4.fromTranslation([], novaPosicao);
-
-            if( player.length > 1 ){
-                player[i] = playerUpdate[playerSize];
-            }
+            player[i] = player[i - 1];
         }
+        player[0] = mat4.fromTranslation([], novaPosicao);
     }
 }
 
