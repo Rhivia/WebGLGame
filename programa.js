@@ -8,6 +8,8 @@ const COS_45 = Math.cos(Math.PI * 0.25); // Calculo para distancia de pontos em 
 
 const mapSize = 10;
 
+const FPS = 60;
+
 let upArrow = 0, 
     downArrow = 0, 
     leftArrow = 0, 
@@ -37,7 +39,9 @@ let frame = 0,
 let modelUniform,
     model,
     models,
-    player = [];
+    player = [],
+    playerUpdate = [],
+    playerSize = 0;
 
 let colorUniform,
     vermelho = [1, 0, 0],
@@ -205,7 +209,7 @@ async function main() {
 function tick() {
     frame++;
 
-    if(frame % 40 > 0) {
+    if(frame % FPS > 0) {
         return window.requestAnimationFrame(tick);
     }
 
@@ -246,13 +250,22 @@ function tick() {
     window.requestAnimationFrame(tick);
 }
 
-function updateSnakePosition(player, novaPosicao) {    
+function updateSnakePosition(player, novaPosicao) {
     if (novaPosicao[0] == apple[12] && novaPosicao[1] == apple[13]) {
+        playerSize++;
         player.push(mat4.fromTranslation([], [apple[12], apple[13], 0]));
         apple = mat4.fromTranslation([], randomApple());
     } else {
-        // MANO A GENTE PAROU AQUI PEGA OS RABISCO
-        player[player.length - 1] = mat4.fromTranslation([], novaPosicao);
+        for (let i = 0; i < playerSize; i++) {
+            console.log(player[i], playerSize);
+            // console.log(novaPosicao);
+            playerUpdate[playerSize] = player[i];
+            player[i] = mat4.fromTranslation([], novaPosicao);
+
+            if( player.length > 1 ){
+                player[i] = playerUpdate[playerSize];
+            }
+        }
     }
 }
 
