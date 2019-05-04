@@ -6,11 +6,13 @@ const SPEED = 0.1; // Velocidade
 
 const COS_45 = Math.cos(Math.PI * 0.25); // Calculo para distancia de pontos em um plano cartesiano
 
-let keyUpArrow = 0, 
-    keyDownArrow = 0, 
-    keyLeft = 0, 
-    keyRight = 0,
-    origin = [0,0,0],
+const mapSize = 10;
+
+let upArrow = 0, 
+    downArrow = 0, 
+    leftArrow = 0, 
+    rightArrow = 0,
+    novaPosicao = [0,0,0],
     pos = [0,0,0];
 
 let frame = 0,
@@ -35,7 +37,7 @@ let frame = 0,
 let modelUniform,
     model,
     models,
-    player;
+    player = [];
 
 let colorUniform,
     vermelho = [1, 0, 0],
@@ -188,9 +190,9 @@ async function main() {
     // 7.3 - MODEL MATRIX UNIFORM
     modelUniform = gl.getUniformLocation(shaderProgram, "model");
     
-    player = mat4.fromTranslation([], origin);
-    //background = mat4.fromTranslation([], [pos[0] - 2, pos[1] + 2, pos[2] + 0]);
-    apple = mat4.fromTranslation([], [pos[0] - 4, pos[1] - 2, pos[2] + 0]);
+    player[0] = mat4.fromTranslation([], [0, 0, 0]);
+    model = mat4.fromTranslation([], [-2, +2, 0]);
+    apple = mat4.fromTranslation([], [-4, -2, 0]);
 
     // 7.4 - COLOR UNIFORM
     colorUniform = gl.getUniformLocation(shaderProgram, "color");
@@ -203,24 +205,32 @@ async function main() {
 function tick() {
     frame++;
 
-    if(frame % 6 > 0) {
+    if(frame % 40 > 0) {
         return window.requestAnimationFrame(tick);
     }
 
-    // let time = frame / 200;
+    let horizontal = (leftArrow + rightArrow);
+    let vertical = (upArrow + downArrow);
 
-    let horizontal = (keyLeft + keyRight); // * SPEED
-    let vertical = (keyUpArrow + keyDownArrow); // * SPEED
+    novaPosicao[0] += horizontal; // Soma a posicao em X atualizada do Player
+    novaPosicao[1] += vertical; // Soma a posicao em Y atualizada do Player
 
-    // if(horizontal !== 0 && vertical !== 0) {
-    //     horizontal *= COS_45;
-    //     vertical *= COS_45;
-    // }
+    // Bordas do mapa
+    if(novaPosicao[1] > mapSize) { // Y > mapSize
+        novaPosicao[1] = -mapSize;
+    }
+    else if(novaPosicao[1] < -mapSize) { // Y < -mapSize
+        novaPosicao[1] = mapSize;
+    }
+    else if(novaPosicao[0] > mapSize) { // X > mapSize
+        novaPosicao[0] = -mapSize;
+    }
+    else if(novaPosicao[0] < -mapSize) { // X < -mapSize
+        novaPosicao[0] = mapSize;
+    }
 
-    origin[0] += horizontal; // Soma a posicao em X atualizada do Player
-    origin[1] += vertical; // Soma a posicao em Y atualizada do Player
-
-    player = mat4.fromTranslation([], origin);
+    // Colisão da cabeça com a maçã
+    updateSnakePosition(player, novaPosicao);
 
     // eye  = [Math.sin(time) * 5, 3, Math.cos(time) * 5]; // For movement, use Math.cos and Math.sin with TIME
     let up = [0, 1, 0];
@@ -229,65 +239,84 @@ function tick() {
     gl.uniformMatrix4fv(viewUniform, false, view);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // Redraw
+    tickGameObjects();
+
+    window.requestAnimationFrame(tick);
+}
+
+function updateSnakePosition(player, novaPosicao) {    
+    if (novaPosicao[0] == apple[12] && novaPosicao[1] == apple[13]) {
+        player.push(mat4.fromTranslation([], [apple[12], apple[13], 0]));
+        apple = mat4.fromTranslation([], randomApple());
+    } else {
+        // MANO A GENTE PAROU AQUI PEGA OS RABISCO
+        player[player.length - 1] = mat4.fromTranslation([], novaPosicao);
+    }
+}
+
+function tickGameObjects() {
     // gl.POINTS
     // gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN 
     //gl.drawArrays(gl.TRIANGLES, 0, data.points.length / 2);
     
-    // Player
-    gl.uniformMatrix4fv(modelUniform, false, player);
-    gl.uniform3f(colorUniform, 0, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 36);
+    for (let i = 0; i < player.length; i++) {
+        const element = player[i];
+        gl.uniformMatrix4fv(modelUniform, false, element);
+        gl.uniform3f(colorUniform, 0, 0, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);   
+    }
     
     gl.uniformMatrix4fv(modelUniform, false, apple);
     gl.uniform3f(colorUniform, vermelho[0], vermelho[1], vermelho[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 
     // CUBO 01
-    // gl.uniformMatrix4fv(modelUniform, false, model);
-    // gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
-    // gl.drawArrays(gl.TRIANGLES, 0, 36);
-
-    // Loop para renderizar todos os modelos de cubos
-    // gl.uniformMatrix4fv(modelUniform, false, background);
-    // gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
-    // gl.drawArrays(gl.TRIANGLES, 0, 36);
-
-    window.requestAnimationFrame(tick);
+    gl.uniformMatrix4fv(modelUniform, false, model);
+    gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
+    gl.drawArrays(gl.TRIANGLES, 0, 36);
 }
 
-function keyUp(evt){
-    if(evt.key === "ArrowDown") {
-        return keyDownArrow = 0;
-    } 
-    if(evt.key === "ArrowUp") {
-        return keyUpArrow = 0;
+function randomApple() {
+    let X = 1, Y = 1;
+    while (X % 2 != 0) {
+        X = Math.floor(Math.random() * 20) - 10;
+        console.log(X);
     }
-    if(evt.key === "ArrowLeft") {
-        return keyLeft = 0;
-    } 
-    if(evt.key === "ArrowRight") {
-        return keyRight = 0;
-    } 
+    while (Y % 2 != 0) {
+        Y = Math.floor(Math.random() * 20) - 10;
+        console.log(Y);
+    }
+    console.log(X, Y);
+    return [X, Y, 0];
 }
 
 function keyDown(evt){
-    console.log(evt);
     if(evt.key === "ArrowDown") {
-        console.log(player);
-        return keyDownArrow = -2;
+        rightArrow = 0;
+        upArrow = 0;
+        leftArrow = 0;
+        return downArrow = -2;
     }
     if(evt.key === "ArrowUp") {
-        console.log(player);
-        return keyUpArrow = 2;
+        rightArrow = 0;
+        downArrow = 0;
+        leftArrow = 0;
+        return upArrow = 2;
     }
     if(evt.key === "ArrowLeft") {
-        console.log(player);
-        return moveLeft(player);
+        rightArrow = 0;
+        downArrow = 0;
+        upArrow = 0;
+        return leftArrow = -2;
     }
     if(evt.key === "ArrowRight") {
-        console.log(player);
-        return moveRight(player);
+        leftArrow = 0;
+        downArrow = 0;
+        upArrow = 0;
+        return rightArrow = 2;
     }
 }
 
@@ -301,24 +330,8 @@ window.addEventListener("load", main);
 // }
 // window.addEventListener("mousemove", follow);
 
-window.addEventListener("keyup", keyUp);
+// window.addEventListener("keyup", keyUp);
 window.addEventListener("keydown", keyDown);
-
-function moveRight(player) {
-    let np = [player[0][0] - 1, player[0][1]];
-    for(var i = player.length-1; i > 0; i--){
-        player[i] = player[i-1];
-    }
-    player[0] = np;
-}
-
-function moveLeft(player) {
-    let np = [player[0][0] + 1, player[0][1]];
-    for(var i = player.length-1; i > 0; i--){
-        player[i] = player[i-1];
-    }
-    player[0] = np;
-}
 
 function createMap(x, y) {
     for (let i = 0; i < x; i++) {
