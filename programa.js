@@ -1,23 +1,17 @@
 /* Variávei globais */
 let { mat4, vec4, vec3, vec2 } = glMatrix;
-// let { getCanvas } = render;
 
-const SPEED = 0.1; // Velocidade
-
-const COS_45 = Math.cos(Math.PI * 0.25); // Calculo para distancia de pontos em um plano cartesiano
-
-const mapSize = 10;
-
-const FPS = 20;
+const mapSize = 10,
+      FPS = 20; // Qnt menor, mais rapido o jogo 
 
 let upArrow = 0,
     downArrow = 0,
     leftArrow = 0,
     rightArrow = 0,
     novaPosicao = [0, 0, 0],
-    pos = [0, 0, 0];
-
-let frame = 0,
+    pos = [0, 0, 0],
+    /////////////////
+    frame = 0,
     canvas,
     gl,
     vertexShaderSource,
@@ -36,26 +30,17 @@ let frame = 0,
     projection,
     loc = [0, 0, 0],
     viewUniform,
-    view;
-
-let modelUniform,
+    view,
+    /////////////////
+    modelUniform,
     model,
-    models,
     player = [],
     playerSize = 1,
-    score = 0;
-
-let colorUniform,
+    score = 0,
+    /////////////////
+    colorUniform,
     vermelho = [1, 0, 0],
-    black = [0, 0, 0],
-    azul = [0, 0, 1],
-    verde = [0, .5, 0],
-    roxo = [.7, 0, .7],
-    laranja = [1, .6, 0],
-    azulClaro = [0, 1, 1],
-    pink = [1, .5, 1],
-    laranjaEscuro = [1, .5, 0]
-azulMedio = [0, .5, 1];
+    verde = [0, .5, 0];   
 
 // Variables for view
 let eye = [0, -20, 15],
@@ -187,10 +172,7 @@ async function main() {
 
     // 3 - Ler os arquivos de shader
     vertexShaderSource = await fetch("vertex.glsl").then(r => r.text());
-    // console.log("VERTEX", vertexShaderSource);
-
     fragmentShaderSource = await fetch("fragment.glsl").then(r => r.text());
-    // console.log("FRAGMENT", fragmentShaderSource);
 
     // 4 - Compilar arquivos de shader
     vertexShader = compileShader(vertexShaderSource, gl.VERTEX_SHADER, gl);
@@ -236,7 +218,6 @@ async function main() {
 
     // 7.4 - COLOR UNIFORM
     colorUniform = gl.getUniformLocation(shaderProgram, "color");
-    //gl.uniform2f(locationUniform, loc[0], loc[1]);
 
     // 8 - Chamar o loop de redesenho
     tick();
@@ -249,8 +230,8 @@ function tick() {
         return window.requestAnimationFrame(tick);
     }
 
-    let horizontal = (leftArrow + rightArrow);
-    let vertical = (upArrow + downArrow);
+    let horizontal = (leftArrow + rightArrow),
+        vertical = (upArrow + downArrow);
 
     novaPosicao[0] += horizontal; // Soma a posicao em X atualizada do Player
     novaPosicao[1] += vertical; // Soma a posicao em Y atualizada do Player
@@ -272,12 +253,11 @@ function tick() {
     // Colisão da cabeça com a maçã
     updateSnakePosition(player, novaPosicao);
 
-    // eye  = [Math.sin(time) * 5, 3, Math.cos(time) * 5]; // For movement, use Math.cos and Math.sin with TIME
-    let up = [0, 1, 0];
-    let center = [0, 0, 0];
+    let up = [0, 1, 0],
+        center = [0, 0, 0];
+
     view = mat4.lookAt([], eye, center, up);
     gl.uniformMatrix4fv(viewUniform, false, view);
-
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Redraw
@@ -318,15 +298,9 @@ function updateSnakePosition(player, novaPosicao) {
 
 function reseta() {
     location.reload();
-
 }
 
 function tickGameObjects() {
-    // gl.POINTS
-    // gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP
-    // gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN 
-    //gl.drawArrays(gl.TRIANGLES, 0, data.points.length / 2);
-
     for (let i = 0; i < player.length; i++) {
         const element = player[i];
         gl.uniformMatrix4fv(modelUniform, false, element);
@@ -350,19 +324,17 @@ function randomApple() {
 
     while (hit) {
         while (X % 2 != 0) {
-
             X = Math.floor(Math.random() * 20) - 10;
         }
         while (Y % 2 != 0) {
-
             Y = Math.floor(Math.random() * 20) - 10;
         }
+
         hit = checkHit(X, Y);
         if (hit) {
             X = 1;
             Y = 1;
         }
-        console.log(hit);
     }
     return [X, Y, 0];
 }
@@ -370,7 +342,6 @@ function randomApple() {
 function checkHit(X, Y) {
     for (let i = 1; i < playerSize; i++) {
         if (X == player[i][12] && Y == player[i][13]) {
-            console.log("hitou")
             return true;
         }
     }
@@ -383,16 +354,19 @@ function keyDown(evt) {
         upArrow = 0;
         leftArrow = 0;
         return downArrow = -2;
+
     } else if (evt.key === "ArrowUp" && downArrow === 0) {
         rightArrow = 0;
         downArrow = 0;
         leftArrow = 0;
         return upArrow = 2;
+
     } else if (evt.key === "ArrowLeft" && rightArrow === 0) {
         rightArrow = 0;
         downArrow = 0;
         upArrow = 0;
         return leftArrow = -2;
+
     } else if (evt.key === "ArrowRight" && leftArrow === 0) {
         leftArrow = 0;
         downArrow = 0;
@@ -401,34 +375,5 @@ function keyDown(evt) {
     }
 }
 
-let delay = (function () {
-    let timer = 0;
-    return function (callback, ms) {
-        clearTimeout(timer);
-        timer = setTimeout(callback, ms);
-    };
-})();
-// keypress, keydown, keyup
 window.addEventListener("load", main);
-
-// function follow(evt) {
-//     let locX = evt.x / window.innerWidth * 2 - 1;
-//     let locY = evt.y / window.innerHeight * -2 + 1;
-//     loc = [locX, locY];
-// }
-// window.addEventListener("mousemove", follow);
-
-// window.addEventListener("keyup", keyUp);
 window.addEventListener("keydown", keyDown);
-
-function createMap(x, y) {
-    for (let i = 0; i < x; i++) {
-        for (let j = 0; j < y; j++) {
-            matriz[i] = [i, j];
-        }
-    }
-}
-
-function renderPlayer(pos) {
-    return mat4.fromTranslation([], [pos[0], pos[1], 0]);
-}
