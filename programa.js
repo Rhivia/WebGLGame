@@ -1,5 +1,5 @@
 /* Variávei globais */
-let {mat4, vec4, vec3, vec2} = glMatrix;
+let { mat4, vec4, vec3, vec2 } = glMatrix;
 // let { getCanvas } = render;
 
 const SPEED = 0.1; // Velocidade
@@ -8,14 +8,14 @@ const COS_45 = Math.cos(Math.PI * 0.25); // Calculo para distancia de pontos em 
 
 const mapSize = 10;
 
-const FPS = 60;
+const FPS = 20;
 
-let upArrow = 0, 
-    downArrow = 0, 
-    leftArrow = 0, 
+let upArrow = 0,
+    downArrow = 0,
+    leftArrow = 0,
     rightArrow = 0,
-    novaPosicao = [0,0,0],
-    pos = [0,0,0];
+    novaPosicao = [0, 0, 0],
+    pos = [0, 0, 0];
 
 let frame = 0,
     canvas,
@@ -55,7 +55,7 @@ let colorUniform,
     azulClaro = [0, 1, 1],
     pink = [1, .5, 1],
     laranjaEscuro = [1, .5, 0]
-    azulMedio = [0, .5, 1];
+azulMedio = [0, .5, 1];
 
 // Variables for view
 let eye = [0, -20, 15],
@@ -149,33 +149,33 @@ function getData() {
     ];
 
     let n = {
-        frente: [0,0,-1],
-        topo: [0,1,0],
-        baixo: [0,-1,0],
-        esquerda: [-1,0,0],
-        direita: [1,0,0],
-        fundo: [0,0,1],
-      };
-    
-      let faceNormals = {
+        frente: [0, 0, -1],
+        topo: [0, 1, 0],
+        baixo: [0, -1, 0],
+        esquerda: [-1, 0, 0],
+        direita: [1, 0, 0],
+        fundo: [0, 0, 1],
+    };
+
+    let faceNormals = {
         frente: [...n.frente, ...n.frente, ...n.frente, ...n.frente, ...n.frente, ...n.frente],
         topo: [...n.topo, ...n.topo, ...n.topo, ...n.topo, ...n.topo, ...n.topo],
         baixo: [...n.baixo, ...n.baixo, ...n.baixo, ...n.baixo, ...n.baixo, ...n.baixo],
         esquerda: [...n.esquerda, ...n.esquerda, ...n.esquerda, ...n.esquerda, ...n.esquerda, ...n.esquerda],
         direita: [...n.direita, ...n.direita, ...n.direita, ...n.direita, ...n.direita, ...n.direita],
         fundo: [...n.fundo, ...n.fundo, ...n.fundo, ...n.fundo, ...n.fundo, ...n.fundo],
-      };
-    
-      let normals = [
+    };
+
+    let normals = [
         ...faceNormals.frente,
         ...faceNormals.topo,
         ...faceNormals.baixo,
         ...faceNormals.esquerda,
         ...faceNormals.direita,
         ...faceNormals.fundo
-      ];
+    ];
 
-    return { "points": new Float32Array(faces), "normals": new Float32Array(normals)};
+    return { "points": new Float32Array(faces), "normals": new Float32Array(normals) };
 }
 
 async function main() {
@@ -229,9 +229,9 @@ async function main() {
 
     // 7.3 - MODEL MATRIX UNIFORM
     modelUniform = gl.getUniformLocation(shaderProgram, "model");
-    
+
     player[0] = mat4.fromTranslation([], [0, 0, 0]);
-    model = mat4.fromRotationTranslationScale([], [0, 0, 0, 1], [0, 0, -2], [ 11, 11, 1]);
+    model = mat4.fromRotationTranslationScale([], [0, 0, 0, 1], [0, 0, -2], [11, 11, 1]);
     apple = mat4.fromTranslation([], [-4, -2, 0]);
 
     // 7.4 - COLOR UNIFORM
@@ -245,7 +245,7 @@ async function main() {
 function tick() {
     frame++;
 
-    if(frame % FPS > 0) {
+    if (frame % FPS > 0) {
         return window.requestAnimationFrame(tick);
     }
 
@@ -256,16 +256,16 @@ function tick() {
     novaPosicao[1] += vertical; // Soma a posicao em Y atualizada do Player
 
     // Bordas do mapa
-    if(novaPosicao[1] > mapSize) { // Y > mapSize
+    if (novaPosicao[1] > mapSize) { // Y > mapSize
         novaPosicao[1] = -mapSize;
     }
-    else if(novaPosicao[1] < -mapSize) { // Y < -mapSize
+    else if (novaPosicao[1] < -mapSize) { // Y < -mapSize
         novaPosicao[1] = mapSize;
     }
-    else if(novaPosicao[0] > mapSize) { // X > mapSize
+    else if (novaPosicao[0] > mapSize) { // X > mapSize
         novaPosicao[0] = -mapSize;
     }
-    else if(novaPosicao[0] < -mapSize) { // X < -mapSize
+    else if (novaPosicao[0] < -mapSize) { // X < -mapSize
         novaPosicao[0] = mapSize;
     }
 
@@ -287,19 +287,19 @@ function tick() {
 }
 
 function updateSnakePosition(player, novaPosicao) {
-    for (let i = 1; i < playerSize; i++) {
-        if(novaPosicao[0] == player[i][12] && novaPosicao[1] == player[i][13]){
-           alert("Perdeu!");
-       }       
-    }
 
+    if (checkHit(novaPosicao[0], novaPosicao[1])) {
+        alert("Perdeu!");
+        // Recarrega a pagina
+        //location.reload();
+    }
 
     if (novaPosicao[0] == apple[12] && novaPosicao[1] == apple[13]) {
         playerSize++;
         player.unshift(mat4.fromTranslation([], [apple[12], apple[13], 0]));
-        
+
         // Condição de vitória
-        if(playerSize == 6){
+        if (playerSize == 6) {
             alert("Venceu!");
         }
         apple = mat4.fromTranslation([], randomApple());
@@ -316,14 +316,14 @@ function tickGameObjects() {
     // gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN 
     //gl.drawArrays(gl.TRIANGLES, 0, data.points.length / 2);
-    
+
     for (let i = 0; i < player.length; i++) {
         const element = player[i];
         gl.uniformMatrix4fv(modelUniform, false, element);
         gl.uniform3f(colorUniform, 0, 0, 0);
-        gl.drawArrays(gl.TRIANGLES, 0, 36);   
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
     }
-    
+
     gl.uniformMatrix4fv(modelUniform, false, apple);
     gl.uniform3f(colorUniform, vermelho[0], vermelho[1], vermelho[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
@@ -336,38 +336,54 @@ function tickGameObjects() {
 
 function randomApple() {
     let X = 1, Y = 1;
-    while (X % 2 != 0) {
-        X = Math.floor(Math.random() * 20) - 10;
-        console.log(X);
+    let hit = true;
+
+    while (hit) {
+        while (X % 2 != 0) {
+
+            X = Math.floor(Math.random() * 20) - 10;
+        }
+        while (Y % 2 != 0) {
+
+            Y = Math.floor(Math.random() * 20) - 10;
+        }
+        hit = checkHit(X, Y);
+        if (hit) {
+            X = 1;
+            Y = 1;
+        }
+        console.log(hit);
     }
-    while (Y % 2 != 0) {
-        Y = Math.floor(Math.random() * 20) - 10;
-        console.log(Y);
-    }
-    console.log(X, Y);
     return [X, Y, 0];
 }
 
-function keyDown(evt){
-    if(evt.key === "ArrowDown" && upArrow == 0) {
+function checkHit(X, Y) {
+    for (let i = 1; i < playerSize; i++) {
+        if (X == player[i][12] && Y == player[i][13]) {
+            console.log("hitou")
+            return true;
+        }
+    }
+    return false;
+}
+
+function keyDown(evt) {
+    if (evt.key === "ArrowDown" && upArrow === 0) {
         rightArrow = 0;
         upArrow = 0;
         leftArrow = 0;
         return downArrow = -2;
-    }
-    if(evt.key === "ArrowUp" && downArrow == 0) {
+    } else if (evt.key === "ArrowUp" && downArrow === 0) {
         rightArrow = 0;
         downArrow = 0;
         leftArrow = 0;
         return upArrow = 2;
-    }
-    if(evt.key === "ArrowLeft" && rightArrow == 0) {
+    } else if (evt.key === "ArrowLeft" && rightArrow === 0) {
         rightArrow = 0;
         downArrow = 0;
         upArrow = 0;
         return leftArrow = -2;
-    }
-    if(evt.key === "ArrowRight" && leftArrow == 0) {
+    } else if (evt.key === "ArrowRight" && leftArrow === 0) {
         leftArrow = 0;
         downArrow = 0;
         upArrow = 0;
