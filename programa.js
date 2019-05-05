@@ -42,8 +42,8 @@ let modelUniform,
     model,
     models,
     player = [],
-    playerAux = [],
-    playerSize = 1;
+    playerSize = 1,
+    score = 0;
 
 let colorUniform,
     vermelho = [1, 0, 0],
@@ -289,19 +289,24 @@ function tick() {
 function updateSnakePosition(player, novaPosicao) {
 
     if (checkHit(novaPosicao[0], novaPosicao[1])) {
-        alert("Perdeu!");
-        // Recarrega a pagina
-        //location.reload();
+        document.getElementById("score").innerHTML = "Perdeu!";
+        document.getElementById("score").style.color = "red";   
+        window.setTimeout(reseta, 1500);
     }
 
     if (novaPosicao[0] == apple[12] && novaPosicao[1] == apple[13]) {
         playerSize++;
+        score++;
+        document.getElementById("score").innerHTML = "Pontuação atual: " + score + "";
+        
+        // Condição de vitória
+        if (score == 15) {
+            document.getElementById("score").innerHTML = "Venceu!";
+            document.getElementById("score").style.color = "green";   
+            window.setTimeout(reseta, 1500);
+        }
         player.unshift(mat4.fromTranslation([], [apple[12], apple[13], 0]));
 
-        // Condição de vitória
-        if (playerSize == 6) {
-            alert("Venceu!");
-        }
         apple = mat4.fromTranslation([], randomApple());
     } else {
         for (let i = playerSize; i > 0; i--) {
@@ -309,6 +314,11 @@ function updateSnakePosition(player, novaPosicao) {
         }
         player[0] = mat4.fromTranslation([], novaPosicao);
     }
+}
+
+function reseta() {
+    location.reload();
+
 }
 
 function tickGameObjects() {
@@ -391,6 +401,13 @@ function keyDown(evt) {
     }
 }
 
+let delay = (function () {
+    let timer = 0;
+    return function (callback, ms) {
+        clearTimeout(timer);
+        timer = setTimeout(callback, ms);
+    };
+})();
 // keypress, keydown, keyup
 window.addEventListener("load", main);
 
