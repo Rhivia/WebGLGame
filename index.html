@@ -1,15 +1,24 @@
 ﻿<!doctype html>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 <html>
-    <head>
-        <title>WebGL Snake Game</title>
-        <script src="gl-matrix.js"></script>
-        <script src="programa.js"></script>
-        
-    </head>
-    <body>
-        <h1>Objetivo: 15</h1>
-        <h1 id = score>Pontuação atual: 0</h1>
-        <canvas 
-            style="position: fixed; top:0; left: 0;"></canvas>
-    </body>
+
+<head>
+    <title>WebGL Snake Game</title>
+    <script src="gl-matrix.js"></script>
+    <script src="programa.js"></script>
+
+</head>
+
+<body class="bg-dark">
+    <div class="container text-center text-white">
+        <h1 class="display-1 font-italic">Snake</h1>
+        <h2 id=objetivo></h1>
+        <h2 id=score>Pontuação atual: 0</h1>
+        <p class="mt-2 mb-0 p-0">Instruções: Controle o cubo preto para que ele coma maçãs(cubos vermelhos) até atinger seu objetivo.</p>
+        <p>Aumente o objetivo com "+" ou "m" e diminua com "-" ou "n".</p>
+
+    </div>
+    <canvas style="position: fixed; top:0; left: 0;"></canvas>
+</body>
+
 </html>

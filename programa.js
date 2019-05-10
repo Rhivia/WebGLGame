@@ -2,7 +2,7 @@
 let { mat4, vec4, vec3, vec2 } = glMatrix;
 
 const mapSize = 10,
-      FPS = 20; // Qnt menor, mais rapido o jogo 
+    FPS = 20; // Qnt menor, mais rapido o jogo 
 
 let upArrow = 0,
     downArrow = 0,
@@ -36,11 +36,14 @@ let upArrow = 0,
     model,
     player = [],
     playerSize = 1,
+    desanhou = true,
     score = 0,
+    objetivo = 15,
+    gameLoop = true,
     /////////////////
     colorUniform,
     vermelho = [1, 0, 0],
-    verde = [0, .5, 0];   
+    verde = [0, .5, 0];
 
 // Variables for view
 let eye = [0, -20, 15],
@@ -224,53 +227,56 @@ async function main() {
 }
 
 function tick() {
-    frame++;
+    if (gameLoop == true) {
+        frame++;
 
-    if (frame % FPS > 0) {
-        return window.requestAnimationFrame(tick);
+        if (frame % FPS > 0) {
+            return window.requestAnimationFrame(tick);
+        }
+
+        let horizontal = (leftArrow + rightArrow),
+            vertical = (upArrow + downArrow);
+
+        novaPosicao[0] += horizontal; // Soma a posicao em X atualizada do Player
+        novaPosicao[1] += vertical; // Soma a posicao em Y atualizada do Player
+
+        // Bordas do mapa
+        if (novaPosicao[1] > mapSize) { // Y > mapSize
+            novaPosicao[1] = -mapSize;
+        }
+        else if (novaPosicao[1] < -mapSize) { // Y < -mapSize
+            novaPosicao[1] = mapSize;
+        }
+        else if (novaPosicao[0] > mapSize) { // X > mapSize
+            novaPosicao[0] = -mapSize;
+        }
+        else if (novaPosicao[0] < -mapSize) { // X < -mapSize
+            novaPosicao[0] = mapSize;
+        }
+
+        // Colisão da cabeça com a maçã
+        updateSnakePosition(player, novaPosicao);
+
+        let up = [0, 1, 0],
+            center = [0, 0, 0];
+
+        view = mat4.lookAt([], eye, center, up);
+        gl.uniformMatrix4fv(viewUniform, false, view);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // Redraw
+        tickGameObjects();
+
+        window.requestAnimationFrame(tick);
     }
-
-    let horizontal = (leftArrow + rightArrow),
-        vertical = (upArrow + downArrow);
-
-    novaPosicao[0] += horizontal; // Soma a posicao em X atualizada do Player
-    novaPosicao[1] += vertical; // Soma a posicao em Y atualizada do Player
-
-    // Bordas do mapa
-    if (novaPosicao[1] > mapSize) { // Y > mapSize
-        novaPosicao[1] = -mapSize;
-    }
-    else if (novaPosicao[1] < -mapSize) { // Y < -mapSize
-        novaPosicao[1] = mapSize;
-    }
-    else if (novaPosicao[0] > mapSize) { // X > mapSize
-        novaPosicao[0] = -mapSize;
-    }
-    else if (novaPosicao[0] < -mapSize) { // X < -mapSize
-        novaPosicao[0] = mapSize;
-    }
-
-    // Colisão da cabeça com a maçã
-    updateSnakePosition(player, novaPosicao);
-
-    let up = [0, 1, 0],
-        center = [0, 0, 0];
-
-    view = mat4.lookAt([], eye, center, up);
-    gl.uniformMatrix4fv(viewUniform, false, view);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // Redraw
-    tickGameObjects();
-
-    window.requestAnimationFrame(tick);
 }
 
 function updateSnakePosition(player, novaPosicao) {
 
     if (checkHit(novaPosicao[0], novaPosicao[1])) {
+        gameLoop = false;
         document.getElementById("score").innerHTML = "Perdeu!";
-        document.getElementById("score").style.color = "red";   
+        document.getElementById("score").style.color = "red";
         window.setTimeout(reseta, 1500);
     }
 
@@ -278,11 +284,12 @@ function updateSnakePosition(player, novaPosicao) {
         playerSize++;
         score++;
         document.getElementById("score").innerHTML = "Pontuação atual: " + score + "";
-        
+
         // Condição de vitória
-        if (score == 15) {
+        if (score == objetivo) {
+            gameLoop = false;
             document.getElementById("score").innerHTML = "Venceu!";
-            document.getElementById("score").style.color = "green";   
+            document.getElementById("score").style.color = "green";
             window.setTimeout(reseta, 1500);
         }
         player.unshift(mat4.fromTranslation([], [apple[12], apple[13], 0]));
@@ -301,6 +308,7 @@ function reseta() {
 }
 
 function tickGameObjects() {
+    document.getElementById("objetivo").innerText = `Objetivo: ${objetivo}`;
     for (let i = 0; i < player.length; i++) {
         const element = player[i];
         gl.uniformMatrix4fv(modelUniform, false, element);
@@ -316,6 +324,7 @@ function tickGameObjects() {
     gl.uniformMatrix4fv(modelUniform, false, model);
     gl.uniform3f(colorUniform, verde[0], verde[1], verde[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
+    desenhou = true;
 }
 
 function randomApple() {
@@ -349,29 +358,37 @@ function checkHit(X, Y) {
 }
 
 function keyDown(evt) {
-    if (evt.key === "ArrowDown" && upArrow === 0) {
-        rightArrow = 0;
-        upArrow = 0;
-        leftArrow = 0;
-        return downArrow = -2;
+    if (desenhou == true) {
+        desenhou = false;
 
-    } else if (evt.key === "ArrowUp" && downArrow === 0) {
-        rightArrow = 0;
-        downArrow = 0;
-        leftArrow = 0;
-        return upArrow = 2;
+        if (evt.key === "ArrowDown" && upArrow === 0) {
+            rightArrow = 0;
+            upArrow = 0;
+            leftArrow = 0;
+            return downArrow = -2;
 
-    } else if (evt.key === "ArrowLeft" && rightArrow === 0) {
-        rightArrow = 0;
-        downArrow = 0;
-        upArrow = 0;
-        return leftArrow = -2;
+        } else if (evt.key === "ArrowUp" && downArrow === 0) {
+            rightArrow = 0;
+            downArrow = 0;
+            leftArrow = 0;
+            return upArrow = 2;
 
-    } else if (evt.key === "ArrowRight" && leftArrow === 0) {
-        leftArrow = 0;
-        downArrow = 0;
-        upArrow = 0;
-        return rightArrow = 2;
+        } else if (evt.key === "ArrowLeft" && rightArrow === 0) {
+            rightArrow = 0;
+            downArrow = 0;
+            upArrow = 0;
+            return leftArrow = -2;
+
+        } else if (evt.key === "ArrowRight" && leftArrow === 0) {
+            leftArrow = 0;
+            downArrow = 0;
+            upArrow = 0;
+            return rightArrow = 2;
+        } else if ( (evt.key === "+" || evt.key === "m") && objetivo > score ) {
+            objetivo += 1;
+        } else if ( (evt.key === "-" || evt.key === "n") && objetivo > score ) {
+            objetivo -= 1;
+        }
     }
 }
 
