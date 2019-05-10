@@ -384,9 +384,9 @@ function keyDown(evt) {
             downArrow = 0;
             upArrow = 0;
             return rightArrow = 2;
-        } else if ( (evt.key === "+" || evt.key === "m") && objetivo > score ) {
+        } else if ( (evt.key === "+" || evt.key === "m") && objetivo > score + 1) {
             objetivo += 1;
-        } else if ( (evt.key === "-" || evt.key === "n") && objetivo > score ) {
+        } else if ( (evt.key === "-" || evt.key === "n") && objetivo > score + 1) {
             objetivo -= 1;
         }
     }
