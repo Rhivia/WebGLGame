@@ -312,7 +312,7 @@ function tickGameObjects() {
     for (let i = 0; i < player.length; i++) {
         const element = player[i];
         gl.uniformMatrix4fv(modelUniform, false, element);
-        gl.uniform3f(colorUniform, 0, 0, 0);
+        gl.uniform3f(colorUniform, 1, 1, 1);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
     }
 
